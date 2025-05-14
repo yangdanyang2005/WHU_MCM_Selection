@@ -14,8 +14,8 @@ plt.rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
 
 # 1. 加载数据
 def load_data():
-    # 加载山景数据 - 从4.1_filtered_mountain_data文件夹读取所有CSV文件
-    mountain_data_folder = "4.1_filtered_mountain_data"
+    # 加载山景数据 - 从5.1_filtered_mountain_data文件夹读取所有CSV文件
+    mountain_data_folder = "5.1_filtered_mountain_data"
     mountain_files = glob.glob(os.path.join(mountain_data_folder, "*.csv"))
     
     # 创建一个空的DataFrame来存储所有山景数据
@@ -326,7 +326,7 @@ def visualize_route(route, G, provinces):
     ax.set_title('最佳山景旅游路线', fontsize=16)
     
     # 保存图像
-    plt.savefig('4.2_mountain_route.png', dpi=300, bbox_inches='tight')
+    plt.savefig('5.2_mountain_route.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 # 8. 生成HTML内容
@@ -401,7 +401,7 @@ def generate_html_report(route, total_time, total_travel_cost, total_ticket_cost
             <h1>中国山景旅游路线规划</h1>
             
             <div class="route-map">
-                <img src="4.2_mountain_route.png" alt="山景旅游路线地图">
+                <img src="5.2_mountain_route.png" alt="山景旅游路线地图">
             </div>
             
             <h2>路线详情</h2>
@@ -449,7 +449,7 @@ def generate_html_report(route, total_time, total_travel_cost, total_ticket_cost
     """
     
     # 保存HTML文件
-    html_file = "4.2_mountain_route_report.html"
+    html_file = "5.2_mountain_route_report.html"
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(html_content)
     

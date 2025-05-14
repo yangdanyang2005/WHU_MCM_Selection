@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # 创建输出文件夹（如果不存在）
-output_folder = "4.1_filtered_mountain_data"
+output_folder = "5.1_filtered_mountain_data"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
