@@ -25,7 +25,10 @@ def load_data():
     # 加载省级行政区数据
     provinces = gpd.read_file('3_省级行政区.geojson')
     
-    return top_cities, city_locations, provinces
+    # 加载广州景点数据
+    guangzhou_attractions = pd.read_csv('2.1_best_attractions/广州.csv')
+    
+    return top_cities, city_locations, provinces, guangzhou_attractions
 
 # 2. 计算两个城市之间的距离
 def calculate_distance(x1, y1, x2, y2):
@@ -100,7 +103,7 @@ def estimate_visit_time(city_name, top_cities_df):
     
     return visit_time
 
-# 新增函数: 估算城市游览费用
+# 6. 估算城市游览费用
 def estimate_city_cost(city_name, top_cities_df):
     """
     估算游览一个城市的门票费用（元）
@@ -123,8 +126,9 @@ def estimate_city_cost(city_name, top_cities_df):
     
     return city_cost
 
-# 6. 规划最佳旅游路线
-def plan_optimal_route(top_cities, city_locations, start_city="广州", max_hours=144):
+
+# 7. 规划最佳旅游路线
+def plan_optimal_route(top_cities, city_locations, guangzhou_attractions=None, start_city="广州", max_hours=144):
     """
     规划最佳旅游路线 - 优化城市数量与费用
     """
@@ -180,8 +184,20 @@ def plan_optimal_route(top_cities, city_locations, start_city="广州", max_hour
     current_city = start_city
     route = [current_city]
     total_time = G.nodes[current_city]['visit_time']  # 初始城市游览时间
-    total_cost = get_city_ticket_price(current_city, top_cities)  # 初始城市门票费用
-    total_attractions = estimate_attractions_per_city(current_city, top_cities)
+    
+    # 获取门票价格
+    if current_city == "广州" and guangzhou_attractions is not None:
+        ticket_price = calculate_guangzhou_ticket_price(guangzhou_attractions)
+    else:
+        ticket_price = get_city_ticket_price(current_city, top_cities)
+        
+    total_cost = ticket_price  # 初始城市费用包含门票
+    
+    # 计算可游览景点数量
+    if current_city == "广州" and guangzhou_attractions is not None:
+        total_attractions = len(guangzhou_attractions)
+    else:
+        total_attractions = estimate_attractions_per_city(current_city, top_cities)
     
     # 已访问城市集合
     visited = {current_city}
@@ -199,9 +215,14 @@ def plan_optimal_route(top_cities, city_locations, start_city="广州", max_hour
             travel_time = G[current_city][neighbor]['travel_time']
             travel_cost = G[current_city][neighbor]['travel_cost']
             
-            # 游览该城市所需时间和费用
+            # 游览该城市所需时间
             visit_time = G.nodes[neighbor]['visit_time']
-            visit_cost = estimate_city_cost(neighbor, top_cities)
+            
+            # 获取门票价格
+            if neighbor == "广州" and guangzhou_attractions is not None:
+                visit_cost = calculate_guangzhou_ticket_price(guangzhou_attractions)
+            else:
+                visit_cost = get_city_ticket_price(neighbor, top_cities)
             
             # 检查是否超出总时间限制
             if total_time + travel_time + visit_time > max_hours:
@@ -225,11 +246,18 @@ def plan_optimal_route(top_cities, city_locations, start_city="广州", max_hour
         travel_time = G[current_city][best_next_city]['travel_time']
         travel_cost = G[current_city][best_next_city]['travel_cost']
         visit_time = G.nodes[best_next_city]['visit_time']
-        visit_cost = get_city_ticket_price(best_next_city, top_cities)
+        
+        # 获取门票价格
+        if best_next_city == "广州" and guangzhou_attractions is not None:
+            visit_cost = calculate_guangzhou_ticket_price(guangzhou_attractions)
+            attractions_count = len(guangzhou_attractions)
+        else:
+            visit_cost = get_city_ticket_price(best_next_city, top_cities)
+            attractions_count = estimate_attractions_per_city(best_next_city, top_cities)
         
         total_time += travel_time + visit_time
         total_cost += travel_cost + visit_cost
-        total_attractions += estimate_attractions_per_city(best_next_city, top_cities)
+        total_attractions += attractions_count
         
         current_city = best_next_city
     
@@ -246,7 +274,8 @@ def plan_optimal_route(top_cities, city_locations, start_city="广州", max_hour
     
     return route, total_time, total_cost, total_attractions, G
 
-# 7. 可视化路线（添加省级行政区背景）
+
+# 8. 可视化路线（添加省级行政区背景）
 def visualize_route(route, city_locations, G, provinces):
     """
     使用matplotlib直接可视化旅游路线，并添加省级行政区背景
@@ -309,12 +338,14 @@ def visualize_route(route, city_locations, G, provinces):
     plt.savefig('4_optimal_route.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-# 8. 计算每个城市的景点数量
-def estimate_attractions_per_city(city_name, top_cities):
+# 9. 计算每个城市的景点数量
+def estimate_attractions_per_city(city_name, top_cities, guangzhou_attractions=None):
     """
-    估算每个城市的景点数量
+    估算每个城市的景点数量，广州使用实际数据
     """
-    if city_name in top_cities['城市'].values:
+    if city_name == "广州" and guangzhou_attractions is not None:
+        return len(guangzhou_attractions)
+    elif city_name in top_cities['城市'].values:
         rank = top_cities[top_cities['城市'] == city_name].index[0] + 1
         # 根据城市排名估算景点数量 
         if rank <= 10:
@@ -325,11 +356,11 @@ def estimate_attractions_per_city(city_name, top_cities):
             return 10
         else:
             return 8
-    else:  # 广州
-        return 15  # 假设广州有15个景点
+    else:
+        return 8  # 其他城市默认景点数
 
-# 9. 生成HTML内容
-def generate_html_report(route, total_time, total_cost, total_attractions, G, top_cities):
+# 10. 生成HTML内容
+def generate_html_report(route, total_time, total_cost, total_attractions, G, top_cities, guangzhou_attractions=None):
     """
     生成HTML报告并在浏览器中打开
     """
@@ -408,8 +439,13 @@ def generate_html_report(route, total_time, total_cost, total_attractions, G, to
     
     # 添加路线详情
     for i, city in enumerate(route):
-        attractions = estimate_attractions_per_city(city, top_cities)
-        city_cost = get_city_ticket_price(city, top_cities)
+        if city == "广州" and guangzhou_attractions is not None:
+            attractions = len(guangzhou_attractions)
+            city_cost = calculate_guangzhou_ticket_price(guangzhou_attractions)
+        else:
+            attractions = estimate_attractions_per_city(city, top_cities)
+            city_cost = get_city_ticket_price(city, top_cities)
+            
         html_content += f'<div class="route-item">'
         
         if i > 0:  # 不是起始城市
@@ -418,11 +454,11 @@ def generate_html_report(route, total_time, total_cost, total_attractions, G, to
             travel_cost = G[prev_city][city]['travel_cost']
             html_content += f"""
             <p><span class="highlight">{i+1}. {city}</span> 
-            (从{prev_city}乘坐高铁约{travel_time:.1f}小时，交通费用{travel_cost:.0f}元，门票费用约{city_cost}元，可游览{attractions}个景点)</p>
+            (从{prev_city}乘坐高铁约{travel_time:.1f}小时，交通费用{travel_cost:.0f}元，门票费用约{city_cost:.0f}元，可游览{attractions}个景点)</p>
             """
         else:  # 起始城市
             html_content += f"""
-            <p><span class="highlight">{i+1}. {city}</span> (起点，门票费用约{city_cost}元，可游览{attractions}个景点)</p>
+            <p><span class="highlight">{i+1}. {city}</span> (起点，门票费用约{city_cost:.0f}元，可游览{attractions}个景点)</p>
             """
         
         html_content += '</div>'
@@ -433,7 +469,6 @@ def generate_html_report(route, total_time, total_cost, total_attractions, G, to
                 <h2>行程总结</h2>
                 <p>总游玩时间: <span class="highlight">{total_time:.2f} 小时</span></p>
                 <p>总费用(含门票和交通): <span class="highlight">{total_cost:.2f} 元</span></p>
-                <p>可游玩城市数量: <span class="highlight">{len(route) - (2 if route[0] == route[-1] else 1)}</span></p>
                 <p>可游玩景点数量: <span class="highlight">{total_attractions}</span></p>
             </div>
         </div>
@@ -451,7 +486,9 @@ def generate_html_report(route, total_time, total_cost, total_attractions, G, to
     
     return abs_path
 
-# 10. 解析门票价格
+
+
+# 11. 解析门票价格
 def parse_ticket_price(price_str, top_cities_df, city_name):
     """
     解析门票价格字符串，返回数值
@@ -472,53 +509,93 @@ def parse_ticket_price(price_str, top_cities_df, city_name):
     # 对于其他情况（如"具体收费情况以现场公示为主"），使用估算
     return estimate_city_cost(city_name, top_cities_df)
 
-# 11. 获取城市门票费用
-def get_city_ticket_price(city_name, top_cities_df):
+# 12. 获取城市门票费用
+def get_city_ticket_price(city_name, top_cities_df, guangzhou_attractions=None):
     """
     获取城市门票费用，优先使用CSV中的数据，缺失时使用估算
     """
-    if city_name in top_cities_df['城市'].values:
+    if city_name == "广州" and guangzhou_attractions is not None:
+        return calculate_guangzhou_ticket_price(guangzhou_attractions)
+    elif city_name in top_cities_df['城市'].values:
         price_str = top_cities_df[top_cities_df['城市'] == city_name]['门票'].values[0]
         return parse_ticket_price(price_str, top_cities_df, city_name)
     else:
         return estimate_city_cost(city_name, top_cities_df)
     
-# 12. 主函数
+    
+# 13. 计算广州景点门票总价
+def calculate_guangzhou_ticket_price(guangzhou_attractions):
+    """
+    计算广州景点的总门票价格
+    """
+    total_price = 0
+    
+    # 检查是否有门票列
+    if '门票' in guangzhou_attractions.columns:
+        # 遍历每个景点的门票价格
+        for _, attraction in guangzhou_attractions.iterrows():
+            price_str = attraction['门票']
+            # 使用与其他城市相同的价格解析方法
+            if pd.isna(price_str):
+                continue
+            
+            # 尝试提取数字
+            import re
+            numbers = re.findall(r'\d+', str(price_str))
+            if numbers:
+                total_price += float(numbers[0])
+            # 处理特殊情况
+            elif '免费' in str(price_str).lower():
+                total_price += 0
+            else:
+                # 对于无法解析的价格，使用默认值
+                total_price += 50  # 假设平均每个景点50元
+    else:
+        # 如果没有门票列，使用默认值
+        total_price = 300
+    
+    return total_price
+
+# 14. 主函数
 def main():
     # 加载数据
-    top_cities, city_locations, provinces = load_data()
+    top_cities, city_locations, provinces, guangzhou_attractions = load_data()
     
     # 规划最佳路线
     route, total_time, total_cost, total_attractions, G = plan_optimal_route(
-        top_cities, city_locations, start_city="广州", max_hours=144
+        top_cities, city_locations, guangzhou_attractions, start_city="广州", max_hours=144
     )
     
     # 打印结果
     print("最佳旅游路线（优化城市数量与费用）:")
     for i, city in enumerate(route):
-        attractions = estimate_attractions_per_city(city, top_cities)
-        city_cost = estimate_city_cost(city, top_cities)
+        if city == "广州":
+            attractions = len(guangzhou_attractions)
+            city_cost = calculate_guangzhou_ticket_price(guangzhou_attractions)
+        else:
+            attractions = estimate_attractions_per_city(city, top_cities)
+            city_cost = get_city_ticket_price(city, top_cities)
+            
         if i > 0:  # 不是起始城市
             prev_city = route[i-1]
             travel_time = G[prev_city][city]['travel_time']
             travel_cost = G[prev_city][city]['travel_cost']
-            print(f"{i+1}. {city} (从{prev_city}乘坐高铁约{travel_time:.1f}小时，交通费用{travel_cost:.0f}元，门票费用约{city_cost}元，可游览{attractions}个景点)")
+            print(f"{i+1}. {city} (从{prev_city}乘坐高铁约{travel_time:.1f}小时，交通费用{travel_cost:.0f}元，门票费用约{city_cost:.0f}元，可游览{attractions}个景点)")
         else:  # 起始城市
-            print(f"{i+1}. {city} (起点，门票费用约{city_cost}元，可游览{attractions}个景点)")
+            print(f"{i+1}. {city} (起点，门票费用约{city_cost:.0f}元，可游览{attractions}个景点)")
     
     # 计算实际游玩的城市数量（如果路线是环形的，则需要减去重复计算的起点/终点）
     city_count = len(route) - (2 if route[0] == route[-1] else 1)
     
     print(f"\n总游玩时间: {total_time:.2f} 小时")
     print(f"总费用(含门票和交通): {total_cost:.2f} 元")
-    print(f"可游玩城市数量: {city_count}")
     print(f"可游玩景点数量: {total_attractions}")
     
     # 可视化路线
     visualize_route(route, city_locations, G, provinces)
     
     # 生成HTML报告并获取文件路径
-    html_file_path = generate_html_report(route, total_time, total_cost, total_attractions, G, top_cities)
+    html_file_path = generate_html_report(route, total_time, total_cost, total_attractions, G, top_cities, guangzhou_attractions)
     
     # 在浏览器中打开HTML文件
     print(f"\n正在浏览器中打开报告: {html_file_path}")
