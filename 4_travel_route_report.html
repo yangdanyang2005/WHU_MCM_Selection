@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>最佳旅游路线规划</title>
+        <title>最佳旅游路线规划（优化城市数量与费用）</title>
         <style>
             body {
                 font-family: 'Microsoft YaHei', sans-serif;
@@ -62,39 +62,46 @@
     </head>
     <body>
         <div class="container">
-            <h1>最佳旅游路线规划</h1>
+            <h1>最佳旅游路线规划（优化城市数量与费用）</h1>
             
             <div class="route-map">
-                <img src="3_optimal_route.png" alt="旅游路线地图">
+                <img src="4_optimal_route.png" alt="旅游路线地图">
             </div>
             
             <h2>路线详情</h2>
     <div class="route-item">
-            <p><span class="highlight">1. 广州</span> (起点，可游览15个景点)</p>
+            <p><span class="highlight">1. 广州</span> (起点，门票费用约300元，可游览15个景点)</p>
             </div><div class="route-item">
             <p><span class="highlight">2. 郴州</span> 
-            (从广州乘坐高铁约6.0小时，费用694元，可游览8个景点)</p>
+            (从广州乘坐高铁约6.0小时，交通费用694元，门票费用约200元，可游览8个景点)</p>
             </div><div class="route-item">
-            <p><span class="highlight">3. 自贡</span> 
-            (从郴州乘坐高铁约14.0小时，费用1590元，可游览12个景点)</p>
+            <p><span class="highlight">3. 娄底</span> 
+            (从郴州乘坐高铁约10.1小时，交通费用1151元，门票费用约200元，可游览8个景点)</p>
             </div><div class="route-item">
-            <p><span class="highlight">4. 廊坊</span> 
-            (从自贡乘坐高铁约9.3小时，费用1069元，可游览10个景点)</p>
+            <p><span class="highlight">4. 德州</span> 
+            (从娄底乘坐高铁约8.4小时，交通费用971元，门票费用约300元，可游览10个景点)</p>
             </div><div class="route-item">
-            <p><span class="highlight">5. 周口</span> 
-            (从廊坊乘坐高铁约23.3小时，费用2636元，可游览12个景点)</p>
+            <p><span class="highlight">5. 塔城</span> 
+            (从德州乘坐高铁约2.0小时，交通费用242元，门票费用约15.0元，可游览8个景点)</p>
             </div><div class="route-item">
-            <p><span class="highlight">6. 德州</span> 
-            (从周口乘坐高铁约7.1小时，费用820元，可游览10个景点)</p>
+            <p><span class="highlight">6. 无锡</span> 
+            (从塔城乘坐高铁约5.9小时，交通费用683元，门票费用约200元，可游览8个景点)</p>
             </div><div class="route-item">
-            <p><span class="highlight">7. 塔城</span> 
-            (从德州乘坐高铁约2.0小时，费用242元，可游览8个景点)</p>
+            <p><span class="highlight">7. 周口</span> 
+            (从无锡乘坐高铁约4.4小时，交通费用514元，门票费用约400元，可游览12个景点)</p>
+            </div><div class="route-item">
+            <p><span class="highlight">8. 淮北</span> 
+            (从周口乘坐高铁约10.5小时，交通费用1200元，门票费用约200元，可游览8个景点)</p>
+            </div><div class="route-item">
+            <p><span class="highlight">9. 保山</span> 
+            (从淮北乘坐高铁约10.2小时，交通费用1164元，门票费用约280.0元，可游览8个景点)</p>
             </div>
             <div class="summary">
                 <h2>行程总结</h2>
-                <p>总游玩时间: <span class="highlight">143.61 小时</span></p>
-                <p>总费用: <span class="highlight">8586.29 元</span></p>
-                <p>可游玩景点数量: <span class="highlight">75</span></p>
+                <p>总游玩时间: <span class="highlight">141.41 小时</span></p>
+                <p>总费用(含门票和交通): <span class="highlight">8713.14 元</span></p>
+                <p>可游玩城市数量: <span class="highlight">8</span></p>
+                <p>可游玩景点数量: <span class="highlight">85</span></p>
             </div>
         </div>
     </body>
