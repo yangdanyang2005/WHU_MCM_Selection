@@ -313,14 +313,13 @@ def visualize_route(route, G, provinces):
             x2, y2 = G.nodes[city2]['x'], G.nodes[city2]['y']
             ax.plot([x1, x2], [y1, y2], 'b-', linewidth=2)
     
-    # 添加城市和山名标签
+    # 添加城市名标签
     for city in route:
         if city in G.nodes:
             x = G.nodes[city]['x']
             y = G.nodes[city]['y']
-            mountain_name = G.nodes[city]['mountain_name']
-            ax.annotate(f"{city}\n({mountain_name})", (x, y), xytext=(5, 5), 
-                       textcoords='offset points', fontsize=10)
+            ax.annotate(f"{city}", (x, y), xytext=(5, 5), 
+                    textcoords='offset points', fontsize=10)
     
     # 设置标题和坐标轴标签
     ax.set_title('最佳山景旅游路线', fontsize=16)
